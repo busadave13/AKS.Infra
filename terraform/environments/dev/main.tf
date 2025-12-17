@@ -10,7 +10,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.85.0"
+      version = "4.52.0"
     }
   }
 }
@@ -75,9 +75,9 @@ module "monitoring" {
   # Azure Monitor (Prometheus)
   monitor_workspace_name = "amw-platform-${var.environment}-${var.location_short}"
 
-  # Grafana
+  # Grafana (name max 23 chars: grafana-plat-dev-wus3 = 21 chars)
   enable_grafana           = var.enable_grafana
-  grafana_name             = "grafana-platform-${var.environment}-${var.location_short}"
+  grafana_name             = "grafana-plat-${var.environment}-${var.location_short}"
   grafana_admin_object_ids = var.grafana_admin_object_ids
 
   # Alerting
@@ -164,8 +164,9 @@ module "keyvault" {
 
   keyvault_name = "kv-platform-${var.environment}-${var.location_short}"
 
-  # Workload Identity Access
-  workload_identity_principal_id = module.aks.workload_identity_principal_id
+  # Workload Identity Access (enabled after AKS is created)
+  enable_workload_identity_access = true
+  workload_identity_principal_id  = module.aks.workload_identity_principal_id
 
   # GitOps PAT
   gitops_pat = var.gitops_pat

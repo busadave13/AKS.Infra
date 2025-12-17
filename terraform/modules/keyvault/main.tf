@@ -21,7 +21,7 @@ resource "azurerm_key_vault" "main" {
   enabled_for_disk_encryption     = false
   enabled_for_deployment          = false
   enabled_for_template_deployment = false
-  enable_rbac_authorization       = true
+  rbac_authorization_enabled      = true
   purge_protection_enabled        = var.enable_purge_protection
   soft_delete_retention_days      = var.soft_delete_retention_days
 
@@ -65,7 +65,7 @@ resource "azurerm_private_endpoint" "keyvault" {
 
 # Grant workload identity access to secrets
 resource "azurerm_role_assignment" "workload_secrets_user" {
-  count = var.workload_identity_principal_id != "" ? 1 : 0
+  count = var.enable_workload_identity_access ? 1 : 0
 
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets User"

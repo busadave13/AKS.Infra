@@ -4,14 +4,14 @@
 # and create the storage account first with:
 #
 # az group create -n rg-terraform-state -l eastus2
-# az storage account create -n stterraformstate -g rg-terraform-state -l eastus2 --sku Standard_LRS
-# az storage container create -n tfstate --account-name stterraformstate
+# az storage account create -n stterraformstatewus3 -g rg-terraform-state -l westus3 --sku Standard_LRS
+# az storage container create -n tfstate --account-name stterraformstatewus3
 #
 
 terraform {
   backend "azurerm" {
     resource_group_name  = "rg-terraform-state"
-    storage_account_name = "stterraformstate"
+    storage_account_name = "stterraformstatewus3"
     container_name       = "tfstate"
     key                  = "aks-dev.terraform.tfstate"
   }
