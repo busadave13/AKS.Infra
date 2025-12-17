@@ -52,7 +52,7 @@ resource "azurerm_dashboard_grafana" "main" {
   name                              = var.grafana_name
   location                          = var.location
   resource_group_name               = var.resource_group_name
-  grafana_major_version             = 10
+  grafana_major_version             = 11
   sku                               = "Standard"
   zone_redundancy_enabled           = false
   api_key_enabled                   = true
