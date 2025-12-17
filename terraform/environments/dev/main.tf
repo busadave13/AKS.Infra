@@ -181,6 +181,9 @@ module "aks" {
   # GitOps (Flux)
   gitops_enabled = true
 
+  # Vertical Pod Autoscaler
+  vpa_enabled = true
+
   tags = local.common_tags
 
   depends_on = [

@@ -66,6 +66,11 @@ resource "azurerm_kubernetes_cluster" "main" {
     }
   }
 
+  # Workload Autoscaler Profile (VPA)
+  workload_autoscaler_profile {
+    vertical_pod_autoscaler_enabled = var.vpa_enabled
+  }
+
   # Auto-upgrade channel
   automatic_upgrade_channel = "patch"
 

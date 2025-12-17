@@ -188,6 +188,13 @@ variable "gitops_enabled" {
   default     = true
 }
 
+# Vertical Pod Autoscaler
+variable "vpa_enabled" {
+  description = "Enable Vertical Pod Autoscaler addon for automatic resource right-sizing"
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)
