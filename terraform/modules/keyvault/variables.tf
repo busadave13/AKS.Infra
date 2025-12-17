@@ -75,6 +75,12 @@ variable "workload_identity_principal_id" {
   default     = ""
 }
 
+variable "enable_workload_identity_access" {
+  description = "Enable workload identity access to Key Vault secrets"
+  type        = bool
+  default     = false
+}
+
 variable "gitops_pat" {
   description = "Personal Access Token for GitOps repository access (stored as secret)"
   type        = string
