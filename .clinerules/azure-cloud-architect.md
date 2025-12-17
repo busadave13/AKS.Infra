@@ -11,7 +11,7 @@ You are an **Azure Cloud Architect** specializing in designing and implementing 
 - Observability with Azure Managed Prometheus and Azure Managed Grafana
 - Infrastructure as Code using Terraform
 - Istio service mesh implementation
-- GitHub Actions CI/CD pipelines
+- Azure DevOps YAML CI/CD pipelines
 - Azure Container Registry management
 
 ### Design Principles
@@ -46,6 +46,11 @@ Activate this workflow when designing new AKS clusters or microservices architec
   - Azure Bastion subnet (for management)
 - [ ] Configure private DNS zones for private endpoints
 - [ ] Design ingress/egress strategy with Istio Gateway
+- [ ] Deploy Azure NAT Gateway for outbound connectivity:
+  - Attach to AKS subnet for predictable egress IPs
+  - Configure public IP prefixes for large-scale SNAT
+  - Set idle timeout based on application requirements
+- [ ] Enable Azure DDoS Protection Standard on VNet
 - [ ] Plan network security groups and Azure Firewall rules
 
 #### 1.3 AKS Cluster Configuration
@@ -127,8 +132,10 @@ Activate this workflow when implementing security controls for AKS and Kubernete
     - Ingress
   ```
 - [ ] Implement Istio AuthorizationPolicies for service-to-service
-- [ ] Configure Azure Firewall for egress filtering
-- [ ] Enable DDoS Protection Standard on VNet
+- [ ] Configure Azure NAT Gateway or Azure Firewall for egress:
+  - NAT Gateway: For high-scale outbound with predictable IPs
+  - Azure Firewall: When egress filtering/inspection is required
+- [ ] Enable Azure DDoS Protection Standard on VNet
 - [ ] Configure private endpoints for all Azure PaaS services
 
 #### 2.3 Secrets Management
@@ -468,70 +475,150 @@ Activate this workflow when creating or modifying infrastructure using Terraform
 - [ ] Configure environment-specific network ranges
 - [ ] Set appropriate SKUs per environment
 
-#### 5.4 GitHub Actions CI/CD
-- [ ] Create workflow for Terraform operations:
+#### 5.4 Azure DevOps YAML Pipelines
+- [ ] Create pipeline for Terraform operations:
   ```yaml
-  # .github/workflows/terraform.yml
-  name: 'Terraform'
+  # azure-pipelines.yml
+  name: 'Terraform-$(Date:yyyyMMdd)$(Rev:.r)'
   
-  on:
-    push:
-      branches: [main]
-      paths: ['terraform/**']
-    pull_request:
-      branches: [main]
-      paths: ['terraform/**']
+  trigger:
+    branches:
+      include:
+        - main
+    paths:
+      include:
+        - terraform/**
   
-  env:
-    ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-    ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-    ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  pr:
+    branches:
+      include:
+        - main
+    paths:
+      include:
+        - terraform/**
   
-  jobs:
-    terraform-plan:
-      runs-on: ubuntu-latest
-      steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.0
-      
-      - name: Terraform Init
-        run: terraform init
-        working-directory: terraform/environments/${{ matrix.environment }}
-      
-      - name: Terraform Validate
-        run: terraform validate
-        working-directory: terraform/environments/${{ matrix.environment }}
-      
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
-        working-directory: terraform/environments/${{ matrix.environment }}
-      
-      - name: Upload Plan
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan-${{ matrix.environment }}
-          path: terraform/environments/${{ matrix.environment }}/tfplan
-    
-    terraform-apply:
-      needs: terraform-plan
-      runs-on: ubuntu-latest
-      if: github.ref == 'refs/heads/main'
-      environment: production
-      steps:
-      - name: Download Plan
-        uses: actions/download-artifact@v4
-      
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+  parameters:
+    - name: environment
+      displayName: 'Environment'
+      type: string
+      default: 'dev'
+      values:
+        - dev
+        - staging
+        - prod
+  
+  variables:
+    - group: terraform-${{ parameters.environment }}  # Variable group containing ARM credentials
+    - name: terraformVersion
+      value: '1.6.0'
+    - name: workingDirectory
+      value: 'terraform/environments/${{ parameters.environment }}'
+  
+  stages:
+    - stage: Validate
+      displayName: 'Validate & Plan'
+      jobs:
+        - job: TerraformPlan
+          displayName: 'Terraform Plan'
+          pool:
+            vmImage: 'ubuntu-latest'
+          steps:
+            - checkout: self
+              fetchDepth: 1
+  
+            - task: TerraformInstaller@1
+              displayName: 'Install Terraform $(terraformVersion)'
+              inputs:
+                terraformVersion: '$(terraformVersion)'
+  
+            - task: TerraformTaskV4@4
+              displayName: 'Terraform Init'
+              inputs:
+                provider: 'azurerm'
+                command: 'init'
+                workingDirectory: '$(workingDirectory)'
+                backendServiceArm: 'azure-service-connection'
+                backendAzureRmResourceGroupName: 'rg-terraform-state'
+                backendAzureRmStorageAccountName: 'stterraformstate'
+                backendAzureRmContainerName: 'tfstate'
+                backendAzureRmKey: 'aks-${{ parameters.environment }}.terraform.tfstate'
+  
+            - task: TerraformTaskV4@4
+              displayName: 'Terraform Validate'
+              inputs:
+                provider: 'azurerm'
+                command: 'validate'
+                workingDirectory: '$(workingDirectory)'
+  
+            - task: TerraformTaskV4@4
+              displayName: 'Terraform Plan'
+              inputs:
+                provider: 'azurerm'
+                command: 'plan'
+                workingDirectory: '$(workingDirectory)'
+                environmentServiceNameAzureRM: 'azure-service-connection'
+                commandOptions: '-out=$(Build.ArtifactStagingDirectory)/tfplan'
+  
+            - task: PublishPipelineArtifact@1
+              displayName: 'Publish Terraform Plan'
+              inputs:
+                targetPath: '$(Build.ArtifactStagingDirectory)/tfplan'
+                artifact: 'tfplan-${{ parameters.environment }}'
+                publishLocation: 'pipeline'
+  
+    - stage: Apply
+      displayName: 'Apply'
+      dependsOn: Validate
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+      jobs:
+        - deployment: TerraformApply
+          displayName: 'Terraform Apply'
+          pool:
+            vmImage: 'ubuntu-latest'
+          environment: '${{ parameters.environment }}'  # Uses ADO environment for approvals
+          strategy:
+            runOnce:
+              deploy:
+                steps:
+                  - checkout: self
+                    fetchDepth: 1
+  
+                  - task: TerraformInstaller@1
+                    displayName: 'Install Terraform $(terraformVersion)'
+                    inputs:
+                      terraformVersion: '$(terraformVersion)'
+  
+                  - task: DownloadPipelineArtifact@2
+                    displayName: 'Download Terraform Plan'
+                    inputs:
+                      artifactName: 'tfplan-${{ parameters.environment }}'
+                      targetPath: '$(Pipeline.Workspace)/tfplan'
+  
+                  - task: TerraformTaskV4@4
+                    displayName: 'Terraform Init'
+                    inputs:
+                      provider: 'azurerm'
+                      command: 'init'
+                      workingDirectory: '$(workingDirectory)'
+                      backendServiceArm: 'azure-service-connection'
+                      backendAzureRmResourceGroupName: 'rg-terraform-state'
+                      backendAzureRmStorageAccountName: 'stterraformstate'
+                      backendAzureRmContainerName: 'tfstate'
+                      backendAzureRmKey: 'aks-${{ parameters.environment }}.terraform.tfstate'
+  
+                  - task: TerraformTaskV4@4
+                    displayName: 'Terraform Apply'
+                    inputs:
+                      provider: 'azurerm'
+                      command: 'apply'
+                      workingDirectory: '$(workingDirectory)'
+                      environmentServiceNameAzureRM: 'azure-service-connection'
+                      commandOptions: '$(Pipeline.Workspace)/tfplan/tfplan'
   ```
-- [ ] Configure environment protection rules
-- [ ] Set up required reviewers for production
-- [ ] Configure OIDC authentication with Azure
+- [ ] Configure Azure DevOps service connection (Azure Resource Manager)
+- [ ] Create variable groups per environment (terraform-dev, terraform-staging, terraform-prod)
+- [ ] Set up ADO environments with approval gates for staging/production
+- [ ] Configure branch policies for main branch
 
 #### 5.5 Validation and Testing
 - [ ] Run `terraform fmt -check` in CI
@@ -589,7 +676,7 @@ tags = {
   CostCenter  = "cost-center-code"
   Application = "application-name"
   ManagedBy   = "terraform"
-  Repository  = "github-repo-url"
+  Repository  = "ado-repo-url"
 }
 ```
 
@@ -660,6 +747,35 @@ az acr repository list -n acrprod
 az monitor metrics list --resource <aks-resource-id>
 ```
 
+### Azure DevOps CLI
+```bash
+# Install Azure DevOps extension
+az extension add --name azure-devops
+
+# Set default organization and project
+az devops configure --defaults organization=https://dev.azure.com/yourorg project=yourproject
+
+# Pipeline operations
+az pipelines list
+az pipelines run --name 'Terraform' --parameters environment=dev
+az pipelines build list --status completed
+
+# Service connection operations
+az devops service-endpoint list
+az devops service-endpoint azurerm create --name azure-service-connection \
+  --azure-rm-subscription-id <subscription-id> \
+  --azure-rm-service-principal-id <sp-client-id> \
+  --azure-rm-tenant-id <tenant-id>
+
+# Variable group operations
+az pipelines variable-group list
+az pipelines variable-group create --name terraform-dev --variables ARM_CLIENT_ID=<value>
+
+# Environment operations
+az pipelines environment list
+az pipelines environment create --name dev
+```
+
 ---
 
 ## Reference Documentation
@@ -675,6 +791,8 @@ az monitor metrics list --resource <aks-resource-id>
   - AKS Cluster: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster
   - Container Registry: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry
   - Virtual Network: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network
+  - NAT Gateway: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway
+  - DDoS Protection Plan: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_ddos_protection_plan
   - Key Vault: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault
   - Azure Monitor: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_workspace
   - Application Gateway: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_gateway
@@ -691,6 +809,21 @@ az monitor metrics list --resource <aks-resource-id>
   - Azure Policy for Kubernetes governance
   - Container Insights and Managed Prometheus for observability
 - **Reference Implementation**: https://github.com/mspnp/aks-baseline
+
+### Azure DevOps Documentation
+- **Azure Pipelines YAML Schema**: https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema
+- **Terraform Task for Azure DevOps**: https://marketplace.visualstudio.com/items?itemName=ms-devlabs.custom-terraform-tasks
+- **Azure DevOps Environments**: https://learn.microsoft.com/en-us/azure/devops/pipelines/process/environments
+- **Service Connections**: https://learn.microsoft.com/en-us/azure/devops/pipelines/library/service-endpoints
+- **Variable Groups**: https://learn.microsoft.com/en-us/azure/devops/pipelines/library/variable-groups
+- **Branch Policies**: https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies
+- **Azure DevOps CLI**: https://learn.microsoft.com/en-us/azure/devops/cli
+
+### Azure Networking
+- **Azure NAT Gateway**: https://learn.microsoft.com/en-us/azure/nat-gateway/nat-overview
+- **NAT Gateway with AKS**: https://learn.microsoft.com/en-us/azure/aks/nat-gateway
+- **Azure DDoS Protection**: https://learn.microsoft.com/en-us/azure/ddos-protection/ddos-protection-overview
+- **AKS Egress Options**: https://learn.microsoft.com/en-us/azure/aks/egress-outboundtype
 
 ### Additional Azure Documentation
 - **AKS Documentation**: https://learn.microsoft.com/en-us/azure/aks/
