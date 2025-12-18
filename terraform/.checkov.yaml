@@ -1,0 +1,105 @@
+# Checkov Configuration for AKS.Infrastructure
+# https://www.checkov.io/
+
+# ============================================================
+# Framework Settings
+# ============================================================
+framework:
+  - terraform
+
+# Directory to scan
+directory:
+  - .
+
+# Output format (for CI/CD integration)
+output:
+  - cli
+  - junitxml
+
+# Output file for JUnit XML (for GitHub Actions)
+output-file-path: checkov-results.xml
+
+# ============================================================
+# Check Configuration
+# ============================================================
+
+# Soft fail - don't fail the build, just report
+soft-fail: false
+
+# Compact output
+compact: true
+
+# Show passed checks
+quiet: false
+
+# ============================================================
+# Skip Checks
+# ============================================================
+# These checks are skipped with justification for a development environment
+
+skip-check:
+  # CKV_AZURE_4: Ensure AKS logging to Azure Monitoring is configured
+  # Justification: Logging IS configured, but Checkov may not detect it correctly
+  # - CKV_AZURE_4
+  
+  # CKV_AZURE_7: Ensure AKS cluster has Network Policy configured
+  # Justification: Azure Network Policy IS configured via network_policy = "azure"
+  # - CKV_AZURE_7
+  
+  # CKV_AZURE_115: Ensure AKS cluster uses managed identities
+  # Justification: Managed Identity IS configured via identity block
+  # - CKV_AZURE_115
+
+  # CKV_AZURE_117: Ensure AKS uses disk encryption set
+  # Justification: Development environment - not required for non-production
+  - CKV_AZURE_117
+  
+  # CKV_AZURE_226: Ensure ephemeral disks are used for OS disks
+  # Justification: Ephemeral disks require specific VM sizes, using managed disks for flexibility
+  - CKV_AZURE_226
+  
+  # CKV_AZURE_141: Ensure AKS uses private cluster mode
+  # Justification: Development environment - public cluster for easier access
+  - CKV_AZURE_141
+  
+  # CKV_AZURE_170: Ensure AKS cluster has HTTP Application Routing disabled
+  # Justification: HTTP Application Routing IS disabled by default
+  # - CKV_AZURE_170
+
+  # CKV_AZURE_232: Ensure AKS cluster has Azure CNI overlay network plugin mode
+  # Justification: Azure CNI Overlay IS configured
+  # - CKV_AZURE_232
+
+# ============================================================
+# External Checks
+# ============================================================
+# Enable external check directories (custom policies)
+# external-checks-dir:
+#   - ./checkov-policies
+
+# ============================================================
+# File Patterns
+# ============================================================
+# Skip specific files or directories
+skip-path:
+  - tests/
+  - .terraform/
+  - "*.tftest.hcl"
+
+# ============================================================
+# Severity Thresholds
+# ============================================================
+# Only fail on HIGH or CRITICAL severity
+check-severity:
+  - HIGH
+  - CRITICAL
+
+# ============================================================
+# Secrets Scanning
+# ============================================================
+# Enable secrets scanning
+enable-secret-scan-all-files: false
+
+# Skip secrets scanning for these file patterns
+secrets-scan-file-type:
+  - .tf
