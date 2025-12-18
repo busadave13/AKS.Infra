@@ -32,7 +32,7 @@ resource "azurerm_container_registry" "main" {
 
   # Enable content trust for Premium SKU
   trust_policy_enabled = var.sku == "Premium" ? true : false
-  
+
   # Enable retention policy for Premium SKU
   retention_policy_in_days = var.sku == "Premium" ? var.retention_days : null
 }

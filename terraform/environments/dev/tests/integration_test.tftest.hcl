@@ -51,10 +51,10 @@ variables {
   }
 
   # Networking
-  vnet_name          = "vnet-aks-test-wus2"
-  vnet_address_space = ["10.0.0.0/16"]
-  aks_subnet_prefix  = "10.0.0.0/22"
-  pe_subnet_prefix   = "10.0.4.0/24"
+  vnet_name                = "vnet-aks-test-wus2"
+  vnet_address_space       = ["10.0.0.0/16"]
+  aks_subnet_prefix        = "10.0.0.0/22"
+  pe_subnet_prefix         = "10.0.4.0/24"
   enable_private_endpoints = false
 
   # Monitoring

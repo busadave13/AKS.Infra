@@ -11,8 +11,8 @@ resource "azurerm_kubernetes_cluster_extension" "flux" {
 
   configuration_settings = {
     # Core controllers (required)
-    "source-controller.enabled"       = "true"
-    "kustomize-controller.enabled"    = "true"
+    "source-controller.enabled"    = "true"
+    "kustomize-controller.enabled" = "true"
 
     # Helm support (recommended)
     "helm-controller.enabled" = tostring(var.enable_helm_controller)
@@ -48,11 +48,11 @@ resource "azurerm_kubernetes_flux_configuration" "infrastructure" {
   }
 
   kustomizations {
-    name                       = "infrastructure"
-    path                       = "./infrastructure/overlays/${var.environment}"
-    sync_interval_in_seconds   = var.sync_interval_seconds * 2
-    retry_interval_in_seconds  = var.retry_interval_seconds
-    recreating_enabled         = false
+    name                      = "infrastructure"
+    path                      = "./infrastructure/overlays/${var.environment}"
+    sync_interval_in_seconds  = var.sync_interval_seconds * 2
+    retry_interval_in_seconds = var.retry_interval_seconds
+    recreating_enabled        = false
   }
 
   depends_on = [azurerm_kubernetes_cluster_extension.flux]
@@ -80,11 +80,11 @@ resource "azurerm_kubernetes_flux_configuration" "apps" {
   }
 
   kustomizations {
-    name                       = "apps"
-    path                       = "./apps/overlays/${var.environment}"
-    sync_interval_in_seconds   = var.sync_interval_seconds
-    retry_interval_in_seconds  = var.retry_interval_seconds
-    depends_on                 = var.enable_infrastructure_config ? ["infrastructure"] : []
+    name                      = "apps"
+    path                      = "./apps/overlays/${var.environment}"
+    sync_interval_in_seconds  = var.sync_interval_seconds
+    retry_interval_in_seconds = var.retry_interval_seconds
+    depends_on                = var.enable_infrastructure_config ? ["infrastructure"] : []
   }
 
   depends_on = [
@@ -115,18 +115,18 @@ resource "azurerm_kubernetes_flux_configuration" "helm_releases" {
   }
 
   kustomizations {
-    name                       = "helm-sources"
-    path                       = "./helm-releases/base/sources"
-    sync_interval_in_seconds   = 300
-    retry_interval_in_seconds  = 120
+    name                      = "helm-sources"
+    path                      = "./helm-releases/base/sources"
+    sync_interval_in_seconds  = 300
+    retry_interval_in_seconds = 120
   }
 
   kustomizations {
-    name                       = "helm-releases"
-    path                       = "./helm-releases/overlays/${var.environment}"
-    sync_interval_in_seconds   = 300
-    retry_interval_in_seconds  = 120
-    depends_on                 = ["helm-sources"]
+    name                      = "helm-releases"
+    path                      = "./helm-releases/overlays/${var.environment}"
+    sync_interval_in_seconds  = 300
+    retry_interval_in_seconds = 120
+    depends_on                = ["helm-sources"]
   }
 
   depends_on = [azurerm_kubernetes_cluster_extension.flux]
