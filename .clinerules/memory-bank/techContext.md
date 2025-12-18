@@ -9,6 +9,11 @@
 - **State File**: `aks-dev.terraform.tfstate`
 - **Version Management**: Centralized in `terraform/environments/dev/main.tf` (no versions.tf in modules)
 
+### Testing Framework
+- **TFLint**: v0.50.3 with Azure ruleset (static analysis)
+- **Checkov**: Security scanning for Azure resources
+- **Terraform Tests**: Native `.tftest.hcl` files for module validation
+
 ### Azure Resources (Development Environment)
 
 | Resource | Name Pattern | SKU/Tier |
@@ -34,7 +39,7 @@
 | Service Network | 10.245.0.0/16 | Kubernetes services |
 
 ### AKS Configuration
-- **Kubernetes Version**: 1.30.x (latest stable)
+- **Kubernetes Version**: 1.32.x (latest stable)
 - **Network Plugin**: Azure CNI Overlay
 - **Network Policy**: Azure
 - **Availability Zones**: 1, 2, 3
@@ -65,17 +70,45 @@
 
 ### CI/CD Pipeline
 - **Platform**: GitHub Actions
-- **Workflow File**: `.github/workflows/terraform.yml`
+- **Main Workflow**: `.github/workflows/terraform.yml` - Infrastructure deployment
+  - Stages: Validate → Plan → Apply/Destroy
+- **Test Workflow**: `.github/workflows/terraform-test.yml` - Testing and validation
+  - Stages: TFLint → Checkov → Format → Validate → Terraform Tests
 - **Authentication**: OIDC (OpenID Connect) with Azure AD
-- **Stages**: Validate → Plan → Apply
 - **Required Secrets**:
   - `AZURE_CLIENT_ID`
   - `AZURE_TENANT_ID`
   - `AZURE_SUBSCRIPTION_ID`
 
+### Testing Infrastructure
+
+#### TFLint Configuration (`terraform/.tflint.hcl`)
+- Azure provider plugin enabled
+- Terraform language rules (recommended preset)
+- Naming convention enforcement (snake_case)
+- Variable/output documentation requirements
+- Standard module structure checks
+
+#### Checkov Configuration (`terraform/.checkov.yaml`)
+- Security scanning for Azure resources
+- Skipped checks for dev environment:
+  - CKV_AZURE_117 (disk encryption set)
+  - CKV_AZURE_226 (ephemeral OS disks)
+  - CKV_AZURE_141 (private cluster mode)
+- HIGH/CRITICAL severity threshold
+- JUnit XML output for CI integration
+
+#### Terraform Native Tests (`terraform/tests/`)
+- `networking_test.tftest.hcl` - Network module validation
+- `aks_test.tftest.hcl` - AKS configuration tests
+- `monitoring_test.tftest.hcl` - Monitoring module tests
+- `integration_test.tftest.hcl` - Full environment validation
+
 ## Development Dependencies
 - Azure CLI
 - Terraform CLI (1.6.0+)
+- TFLint (0.50.3+)
+- Checkov (latest)
 - kubectl
 - Helm (optional)
 - Git
@@ -88,3 +121,6 @@
 | `terraform/environments/dev/variables.tf` | Variable definitions |
 | `terraform/environments/dev/backend.tf` | State backend config |
 | `.github/workflows/terraform.yml` | GitHub Actions CI/CD pipeline |
+| `terraform/.tflint.hcl` | TFLint configuration |
+| `terraform/.checkov.yaml` | Checkov security scan config |
+| `terraform/tests/` | Terraform native test files |
