@@ -4,9 +4,9 @@
 #--------------------------------------------------------------
 # General
 #--------------------------------------------------------------
-resource_group_name = "rg-aks-platform-dev-wus3"
-location            = "westus3"
-location_short      = "wus3"
+resource_group_name = "rg-aks-platform-dev-wus2"
+location            = "westus2"
+location_short      = "wus2"
 environment         = "dev"
 
 tags = {
@@ -20,7 +20,7 @@ tags = {
 #--------------------------------------------------------------
 # Networking
 #--------------------------------------------------------------
-vnet_name          = "vnet-platform-dev-wus3"
+vnet_name          = "vnet-platform-dev-wus2"
 vnet_address_space = ["10.0.0.0/16"]
 aks_subnet_prefix  = "10.0.0.0/22"
 pe_subnet_prefix   = "10.0.4.0/24"
@@ -61,7 +61,7 @@ workload_node_spot      = true
 #--------------------------------------------------------------
 # ACR
 #--------------------------------------------------------------
-acr_name = "acrplatformdevwus3"
+acr_name = "acrplatformdevwus2"
 acr_sku  = "Basic"
 
 #--------------------------------------------------------------
