@@ -27,6 +27,12 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "node_resource_group" {
+  description = "Name of the resource group for AKS node pool resources (VMs, disks, NICs). If not specified, Azure will auto-generate a name in the format MC_<resource-group>_<cluster-name>_<location>"
+  type        = string
+  default     = null
+}
+
 variable "dns_prefix" {
   description = "DNS prefix for the AKS cluster"
   type        = string

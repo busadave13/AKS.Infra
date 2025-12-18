@@ -20,9 +20,10 @@ module "aks" {
   resource_group_name = module.networking.resource_group_name
   location            = module.networking.resource_group_location
   
-  cluster_name       = "aks-dev-wus2"
-  dns_prefix         = "aks-dev"
-  kubernetes_version = "1.32"
+  cluster_name        = "aks-dev-wus2"
+  node_resource_group = "rg-aks-nodepool-dev-wus2"  # Optional: custom name for node RG
+  dns_prefix          = "aks-dev"
+  kubernetes_version  = "1.32"
   
   aks_subnet_id              = module.networking.aks_subnet_id
   log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
@@ -66,6 +67,7 @@ module "aks" {
 | resource_group_name | Name of the resource group | string | - | yes |
 | location | Azure region | string | - | yes |
 | cluster_name | Name of the AKS cluster | string | - | yes |
+| node_resource_group | Custom name for node resource group | string | null | no |
 | dns_prefix | DNS prefix for the cluster | string | - | yes |
 | kubernetes_version | Kubernetes version | string | "1.30" | no |
 | aks_subnet_id | ID of the AKS subnet | string | - | yes |

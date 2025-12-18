@@ -5,14 +5,16 @@
 ### Terraform Configuration
 - **Version**: 1.6.0+
 - **Backend**: Azure Storage Account (azurerm)
-- **Provider**: AzureRM (latest stable)
+- **Provider**: AzureRM 4.52.0 (pinned in root module)
 - **State File**: `aks-dev.terraform.tfstate`
+- **Version Management**: Centralized in `terraform/environments/dev/main.tf` (no versions.tf in modules)
 
 ### Azure Resources (Development Environment)
 
 | Resource | Name Pattern | SKU/Tier |
 |----------|--------------|----------|
 | Resource Group | `rg-aks-dev-wus2` | N/A |
+| Node Resource Group | `rg-aks-nodepool-dev-wus2` | N/A (Azure-managed) |
 | Virtual Network | `vnet-aks-dev-wus2` | 10.0.0.0/16 |
 | AKS Cluster | `aks-dev-wus2` | Free tier |
 | System Node Pool | `system` | Standard_B2ms (2 nodes) |

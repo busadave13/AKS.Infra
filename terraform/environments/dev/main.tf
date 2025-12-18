@@ -98,10 +98,11 @@ module "aks" {
   location            = module.networking.resource_group_location
 
   # Cluster Configuration
-  cluster_name       = "aks-${var.environment}-${var.location_short}"
-  dns_prefix         = "aks-${var.environment}"
-  kubernetes_version = var.kubernetes_version
-  aks_subnet_id      = module.networking.aks_subnet_id
+  cluster_name        = "aks-${var.environment}-${var.location_short}"
+  node_resource_group = "rg-aks-nodepool-${var.environment}-${var.location_short}"
+  dns_prefix          = "aks-${var.environment}"
+  kubernetes_version  = var.kubernetes_version
+  aks_subnet_id       = module.networking.aks_subnet_id
 
   # Identity
   kubelet_identity_name  = "id-aks-kubelet-${var.environment}-${var.location_short}"
