@@ -65,7 +65,7 @@ jobs:
           for dir in modules/*/; do
             echo "### Module: $dir" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            tflint --config=../.tflint.hcl --chdir="$dir" 2>&1 | tee -a $GITHUB_STEP_SUMMARY || true
+            tflint --config=$GITHUB_WORKSPACE/terraform/.tflint.hcl --chdir="$dir" 2>&1 | tee -a $GITHUB_STEP_SUMMARY || true
             echo '```' >> $GITHUB_STEP_SUMMARY
           done
 
@@ -73,7 +73,7 @@ jobs:
         run: |
           echo "### Environment: dev" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          tflint --config=../.tflint.hcl --chdir=environments/dev 2>&1 | tee -a $GITHUB_STEP_SUMMARY || true
+          tflint --config=$GITHUB_WORKSPACE/terraform/.tflint.hcl --chdir=environments/dev 2>&1 | tee -a $GITHUB_STEP_SUMMARY || true
           echo '```' >> $GITHUB_STEP_SUMMARY
 
   # ============================================================
