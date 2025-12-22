@@ -53,19 +53,22 @@ resource "azurerm_kubernetes_cluster" "main" {
 
   # System node pool (required)
   default_node_pool {
-    name                         = "system"
-    vm_size                      = var.system_node_vm_size
-    node_count                   = var.system_node_count
-    min_count                    = var.system_node_min_count
-    max_count                    = var.system_node_max_count
-    auto_scaling_enabled         = true
-    os_disk_type                 = "Ephemeral"
-    os_disk_size_gb              = 30
-    os_sku                       = "Ubuntu"
-    max_pods                     = 30
-    only_critical_addons_enabled = true
-    zones                        = ["1", "2", "3"]
-    vnet_subnet_id               = var.system_subnet_id
+    name                 = "system"
+    vm_size              = var.system_node_vm_size
+    node_count           = var.system_node_count
+    auto_scaling_enabled = false
+    os_disk_type         = "Ephemeral"
+    os_disk_size_gb      = 30
+    os_sku               = "Ubuntu"
+    max_pods             = 30
+    vnet_subnet_id       = var.system_subnet_id
+
+    # Only enable critical addons restriction when workload pool exists
+    # When no workload pool, workloads must run on system nodes
+    only_critical_addons_enabled = var.enable_workload_node_pool
+
+    # Availability zones - use null when empty list (for single-node clusters)
+    zones = length(var.system_node_zones) > 0 ? var.system_node_zones : null
 
     node_labels = {
       "nodepool" = "system"
@@ -155,9 +158,11 @@ resource "azurerm_kubernetes_cluster" "main" {
 }
 
 #--------------------------------------------------------------
-# Workload Node Pool (Spot Instances)
+# Workload Node Pool (Optional - Spot Instances)
 #--------------------------------------------------------------
 resource "azurerm_kubernetes_cluster_node_pool" "workload" {
+  count = var.enable_workload_node_pool ? 1 : 0
+
   name                        = "workload"
   kubernetes_cluster_id       = azurerm_kubernetes_cluster.main.id
   vm_size                     = var.workload_node_vm_size
@@ -167,16 +172,16 @@ resource "azurerm_kubernetes_cluster_node_pool" "workload" {
   os_disk_type                = "Managed"
   os_disk_size_gb             = 30
   max_pods                    = 30
-  zones                       = ["1", "2", "3"]
   vnet_subnet_id              = var.workload_subnet_id
   temporary_name_for_rotation = "workloadtmp"
   tags                        = var.tags
 
-  # Autoscaling
-  auto_scaling_enabled = true
+  # Fixed node count (no autoscaling)
+  auto_scaling_enabled = false
   node_count           = var.workload_node_count
-  min_count            = var.workload_node_min_count
-  max_count            = var.workload_node_max_count
+
+  # Availability zones - use null when empty list
+  zones = length(var.workload_node_zones) > 0 ? var.workload_node_zones : null
 
   # Spot instances for cost savings
   priority        = var.workload_node_spot ? "Spot" : "Regular"
@@ -197,12 +202,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "workload" {
     content {
       max_surge = "10%"
     }
-  }
-
-  lifecycle {
-    ignore_changes = [
-      node_count,
-    ]
   }
 }
 

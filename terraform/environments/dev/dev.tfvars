@@ -1,12 +1,12 @@
-# Staging Environment - Variable Values
-# AKS Infrastructure
+# Dev Environment - Variable Values
+# Single-node AKS Infrastructure for Development
 
 #--------------------------------------------------------------
 # General
 #--------------------------------------------------------------
-identifier  = "xpci"
-location    = "westus2"
-environment = "staging"
+identifier  = "dev"
+location    = "westus"
+environment = "dev"
 
 tags = {
   Owner       = "platform-team"
@@ -16,26 +16,27 @@ tags = {
 
 #--------------------------------------------------------------
 # Networking
-# Using 10.1.0.0/16 to avoid conflicts with dev (10.0.0.0/16)
+# Using same address space as staging (no peering planned)
 #--------------------------------------------------------------
 vnet_address_space     = ["10.1.0.0/16"]
 system_subnet_prefix   = "10.1.0.0/23"
 workload_subnet_prefix = "10.1.2.0/23"
 private_subnet_prefix  = "10.1.4.0/24"
 
-# Disable private endpoints for staging (enable for more production-like setup)
+# Disable private endpoints for dev
 enable_private_endpoints = false
 
 #--------------------------------------------------------------
 # Monitoring
 #--------------------------------------------------------------
-enable_grafana = true
+# Disable Grafana for dev to reduce costs
+enable_grafana = false
 
-# Add your Azure AD object IDs for Grafana admin access
-grafana_admin_object_ids = ["197a7ad1-564b-4c89-9934-c50f7da5de68"]
+# Add your Azure AD object IDs for Grafana admin access (if enabled)
+grafana_admin_object_ids = []
 
 #--------------------------------------------------------------
-# AKS
+# AKS - Single Node Configuration
 #--------------------------------------------------------------
 kubernetes_version = "1.32"
 
@@ -45,17 +46,13 @@ aks_admin_group_object_ids = []
 # Add your Azure AD user object IDs for AKS admin access
 aks_admin_user_object_ids = ["197a7ad1-564b-4c89-9934-c50f7da5de68"]
 
-# System Node Pool
-system_node_count   = 2
+# System Node Pool - Single node, no availability zones
+system_node_count   = 1
 system_node_vm_size = "Standard_B2ms"
-system_node_zones   = ["1", "2", "3"]
+system_node_zones   = [] # No zones for single-node cluster
 
-# Workload Node Pool
-enable_workload_node_pool = true
-workload_node_count       = 2
-workload_node_vm_size     = "Standard_B2ms"
-workload_node_zones       = ["1", "2", "3"]
-workload_node_spot        = false
+# Workload Node Pool - Disabled (workloads run on system node)
+enable_workload_node_pool = false
 
 #--------------------------------------------------------------
 # ACR
@@ -67,7 +64,7 @@ acr_sku = "Basic"
 #--------------------------------------------------------------
 enable_gitops          = true
 gitops_repo_url        = "https://github.com/busadave13/K8.Infra.GitOps.git"
-gitops_branch          = "staging"
+gitops_branch          = "dev"
 public_repo            = true
 git_https_user         = "git"
 sync_interval_seconds  = 60

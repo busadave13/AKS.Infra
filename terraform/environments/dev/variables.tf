@@ -1,4 +1,4 @@
-# Staging Environment - Variables
+# Dev Environment - Variables
 
 #--------------------------------------------------------------
 # General
@@ -69,7 +69,7 @@ variable "enable_private_endpoints" {
 variable "enable_grafana" {
   description = "Enable Azure Managed Grafana"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "grafana_admin_object_ids" {
@@ -103,7 +103,7 @@ variable "aks_admin_user_object_ids" {
 variable "system_node_count" {
   description = "Number of nodes in the system node pool"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "system_node_vm_size" {
@@ -115,20 +115,20 @@ variable "system_node_vm_size" {
 variable "system_node_zones" {
   description = "Availability zones for system node pool. Empty list disables zones."
   type        = list(string)
-  default     = ["1", "2", "3"]
+  default     = []
 }
 
 # Workload Node Pool
 variable "enable_workload_node_pool" {
   description = "Enable separate workload node pool"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "workload_node_count" {
   description = "Number of nodes in the workload node pool"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "workload_node_vm_size" {
@@ -140,13 +140,13 @@ variable "workload_node_vm_size" {
 variable "workload_node_zones" {
   description = "Availability zones for workload node pool. Empty list disables zones."
   type        = list(string)
-  default     = ["1", "2", "3"]
+  default     = []
 }
 
 variable "workload_node_spot" {
   description = "Whether to use spot instances for workload node pool"
   type        = bool
-  default     = true
+  default     = false
 }
 
 #--------------------------------------------------------------

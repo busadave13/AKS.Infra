@@ -100,21 +100,9 @@ variable "workload_identity_service_account" {
 # System Node Pool
 #--------------------------------------------------------------
 variable "system_node_count" {
-  description = "Initial number of nodes in the system node pool"
+  description = "Number of nodes in the system node pool"
   type        = number
   default     = 2
-}
-
-variable "system_node_min_count" {
-  description = "Minimum number of nodes in the system node pool"
-  type        = number
-  default     = 2
-}
-
-variable "system_node_max_count" {
-  description = "Maximum number of nodes in the system node pool"
-  type        = number
-  default     = 3
 }
 
 variable "system_node_vm_size" {
@@ -123,31 +111,37 @@ variable "system_node_vm_size" {
   default     = "Standard_B2ms"
 }
 
+variable "system_node_zones" {
+  description = "Availability zones for system node pool. Empty list disables zones (required for single-node clusters)."
+  type        = list(string)
+  default     = ["1", "2", "3"]
+}
+
 #--------------------------------------------------------------
 # Workload Node Pool
 #--------------------------------------------------------------
+variable "enable_workload_node_pool" {
+  description = "Enable separate workload node pool. Set to false for single-node clusters where workloads run on system nodes."
+  type        = bool
+  default     = true
+}
+
 variable "workload_node_count" {
-  description = "Initial number of nodes in the workload node pool"
+  description = "Number of nodes in the workload node pool"
   type        = number
   default     = 2
-}
-
-variable "workload_node_min_count" {
-  description = "Minimum number of nodes in the workload node pool"
-  type        = number
-  default     = 1
-}
-
-variable "workload_node_max_count" {
-  description = "Maximum number of nodes in the workload node pool"
-  type        = number
-  default     = 4
 }
 
 variable "workload_node_vm_size" {
   description = "VM size for workload node pool"
   type        = string
   default     = "Standard_B2ms"
+}
+
+variable "workload_node_zones" {
+  description = "Availability zones for workload node pool. Empty list disables zones."
+  type        = list(string)
+  default     = ["1", "2", "3"]
 }
 
 variable "workload_node_spot" {

@@ -1,5 +1,5 @@
-# Staging Environment - Main Configuration
-# AKS Infrastructure
+# Dev Environment - Main Configuration
+# Single-node AKS Infrastructure for Development
 
 #--------------------------------------------------------------
 # Data Sources
@@ -62,12 +62,12 @@ module "monitoring" {
   # Azure Monitor (Prometheus)
   monitor_workspace_name = "amw-${module.common.naming_prefix}"
 
-  # Grafana
+  # Grafana - disabled for dev by default
   enable_grafana           = var.enable_grafana
   grafana_name             = "graf-${module.common.naming_prefix}"
   grafana_admin_object_ids = var.grafana_admin_object_ids
 
-  # Alerting
+  # Alerting - disabled for dev
   enable_prometheus_alerts = false
   aks_cluster_name         = ""
   alert_action_group_id    = ""
@@ -76,7 +76,7 @@ module "monitoring" {
 }
 
 #--------------------------------------------------------------
-# AKS Module
+# AKS Module - Single Node Configuration
 #--------------------------------------------------------------
 module "aks" {
   source = "../../modules/aks"
@@ -96,12 +96,12 @@ module "aks" {
   kubelet_identity_name  = "id-kubelet-${module.common.naming_prefix}"
   workload_identity_name = "id-workload-${module.common.naming_prefix}"
 
-  # System Node Pool
+  # System Node Pool - Single node, no zones
   system_node_count   = var.system_node_count
   system_node_vm_size = var.system_node_vm_size
   system_node_zones   = var.system_node_zones
 
-  # Workload Node Pool
+  # Workload Node Pool - Disabled for single-node dev cluster
   enable_workload_node_pool = var.enable_workload_node_pool
   workload_node_count       = var.workload_node_count
   workload_node_vm_size     = var.workload_node_vm_size
@@ -130,7 +130,7 @@ module "acr" {
   acr_name = "cr${module.common.identifier}${module.common.environment}${module.common.region_abbreviation}"
   sku      = var.acr_sku
 
-  # Private Endpoint
+  # Private Endpoint - disabled for dev
   enable_private_endpoint    = var.enable_private_endpoints
   private_endpoint_name      = "pep-acr-${module.common.naming_prefix}"
   private_endpoint_subnet_id = module.networking.private_subnet_id
@@ -160,7 +160,7 @@ module "keyvault" {
   # GitOps PAT
   gitops_pat = var.gitops_pat
 
-  # Private Endpoint
+  # Private Endpoint - disabled for dev
   enable_private_endpoint      = var.enable_private_endpoints
   private_endpoint_name        = "pep-kv-${module.common.naming_prefix}"
   private_endpoint_subnet_id   = module.networking.private_subnet_id
