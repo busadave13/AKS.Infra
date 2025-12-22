@@ -4,24 +4,20 @@
 #--------------------------------------------------------------
 # General
 #--------------------------------------------------------------
-resource_group_name = "rg-aks-staging-wus2"
-location            = "westus2"
-location_short      = "wus2"
-environment         = "staging"
+identifier  = "xpci"
+location    = "westus2"
+environment = "staging"
 
 tags = {
-  Environment = "staging"
   Owner       = "platform-team"
   CostCenter  = "IT-1234"
   Application = "aks-microservices"
-  ManagedBy   = "terraform"
 }
 
 #--------------------------------------------------------------
 # Networking
 # Using 10.1.0.0/16 to avoid conflicts with dev (10.0.0.0/16)
 #--------------------------------------------------------------
-vnet_name              = "vnet-aks-staging-wus2"
 vnet_address_space     = ["10.1.0.0/16"]
 system_subnet_prefix   = "10.1.0.0/23"
 workload_subnet_prefix = "10.1.2.0/23"
@@ -62,8 +58,7 @@ workload_node_spot      = false
 #--------------------------------------------------------------
 # ACR
 #--------------------------------------------------------------
-acr_name = "acraksstagingwus2"
-acr_sku  = "Basic"
+acr_sku = "Basic"
 
 #--------------------------------------------------------------
 # GitOps

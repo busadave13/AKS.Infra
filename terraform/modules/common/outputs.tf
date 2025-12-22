@@ -5,7 +5,7 @@ output "naming_prefix" {
   value       = local.naming_prefix
 }
 
-output "region_abbrev" {
+output "region_abbreviation" {
   description = "Abbreviated region code (e.g., eus2 for eastus2)"
   value       = local.region_abbrev
 }
