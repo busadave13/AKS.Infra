@@ -123,6 +123,17 @@ variable "system_node_max_pods" {
   default     = 30
 }
 
+variable "system_node_os_disk_type" {
+  description = "OS disk type for system node pool (Ephemeral or Managed)"
+  type        = string
+  default     = "Ephemeral"
+
+  validation {
+    condition     = contains(["Ephemeral", "Managed"], var.system_node_os_disk_type)
+    error_message = "OS disk type must be either Ephemeral or Managed."
+  }
+}
+
 #--------------------------------------------------------------
 # Workload Node Pool
 #--------------------------------------------------------------
@@ -160,4 +171,15 @@ variable "workload_node_max_pods" {
   description = "Maximum number of pods per node in the workload node pool"
   type        = number
   default     = 30
+}
+
+variable "workload_node_os_disk_type" {
+  description = "OS disk type for workload node pool (Ephemeral or Managed)"
+  type        = string
+  default     = "Managed"
+
+  validation {
+    condition     = contains(["Ephemeral", "Managed"], var.workload_node_os_disk_type)
+    error_message = "OS disk type must be either Ephemeral or Managed."
+  }
 }

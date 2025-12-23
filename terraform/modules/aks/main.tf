@@ -57,7 +57,7 @@ resource "azurerm_kubernetes_cluster" "main" {
     vm_size              = var.system_node_vm_size
     node_count           = var.system_node_count
     auto_scaling_enabled = false
-    os_disk_type         = "Ephemeral"
+    os_disk_type         = var.system_node_os_disk_type
     os_disk_size_gb      = 30
     os_sku               = "Ubuntu"
     max_pods             = var.system_node_max_pods
@@ -169,7 +169,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "workload" {
   mode                        = "User"
   os_type                     = "Linux"
   os_sku                      = "Ubuntu"
-  os_disk_type                = "Managed"
+  os_disk_type                = var.workload_node_os_disk_type
   os_disk_size_gb             = 30
   max_pods                    = var.workload_node_max_pods
   vnet_subnet_id              = var.workload_subnet_id

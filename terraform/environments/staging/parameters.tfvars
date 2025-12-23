@@ -46,10 +46,11 @@ aks_admin_group_object_ids = []
 aks_admin_user_object_ids = ["197a7ad1-564b-4c89-9934-c50f7da5de68"]
 
 # System Node Pool - 1 node, no availability zones
-system_node_count    = 1
-system_node_vm_size  = "Standard_D4s_v5"
-system_node_zones    = [] # No zones for multi-node cluster without zone redundancy
-system_node_max_pods = 50
+system_node_count        = 1
+system_node_vm_size      = "Standard_D4as_v5"
+system_node_zones        = [] # No zones for multi-node cluster without zone redundancy
+system_node_max_pods     = 50
+system_node_os_disk_type = "Managed"
 
 # Workload Node Pool - 1 node, no availability zones
 enable_workload_node_pool = true
