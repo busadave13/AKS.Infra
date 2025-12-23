@@ -29,11 +29,11 @@ enable_private_endpoints = false
 #--------------------------------------------------------------
 # Monitoring
 #--------------------------------------------------------------
-# Disable Grafana for dev to reduce costs
-enable_grafana = false
+# Enable Grafana for dev to test all features
+enable_grafana = true
 
-# Add your Azure AD object IDs for Grafana admin access (if enabled)
-grafana_admin_object_ids = []
+# Azure AD object IDs for Grafana admin access
+grafana_admin_object_ids = ["197a7ad1-564b-4c89-9934-c50f7da5de68"]
 
 #--------------------------------------------------------------
 # AKS - Single Node Configuration
