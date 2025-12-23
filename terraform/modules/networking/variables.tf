@@ -72,3 +72,12 @@ variable "egress_public_ip_name" {
   description = "Name of the public IP for load balancer egress"
   type        = string
 }
+
+#--------------------------------------------------------------
+# Availability Zones
+#--------------------------------------------------------------
+variable "zones" {
+  description = "Availability zones for zone-redundant resources. Empty list disables zones."
+  type        = list(string)
+  default     = []
+}

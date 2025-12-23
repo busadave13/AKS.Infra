@@ -46,6 +46,9 @@ module "networking" {
   # Public IP for Egress
   egress_public_ip_name = "pip-egress-${module.common.naming_prefix}"
 
+  # Availability Zones - use same zones as AKS system nodes
+  zones = var.system_node_zones
+
   tags = module.common.tags
 }
 
