@@ -127,11 +127,29 @@ jobs:
         id: plan
         run: |
           set +e
-          terraform plan -var-file=parameters.tfvars -detailed-exitcode -no-color -out=tfplan 2>&1 | tee plan_output.txt
-          PLAN_EXIT_CODE=${PIPESTATUS[0]}
+          # Run plan and capture output
+          terraform plan -var-file=parameters.tfvars -detailed-exitcode -no-color -out=tfplan > plan_output.txt 2>&1
+          PLAN_EXIT_CODE=$?
+          
+          # Display plan output
+          cat plan_output.txt
+          
+          # Set output for downstream jobs
           echo "exitcode=$PLAN_EXIT_CODE" >> $GITHUB_OUTPUT
-          echo "Plan exit code: $PLAN_EXIT_CODE"
-          exit 0
+          echo "::notice::Terraform plan exit code: $PLAN_EXIT_CODE"
+          
+          # Exit code meanings:
+          # 0 = No changes
+          # 1 = Error
+          # 2 = Changes detected
+          if [ $PLAN_EXIT_CODE -eq 0 ]; then
+            echo "::notice::✅ No infrastructure changes detected"
+          elif [ $PLAN_EXIT_CODE -eq 2 ]; then
+            echo "::notice::📋 Infrastructure changes detected - apply will be triggered"
+          else
+            echo "::error::❌ Terraform plan failed"
+            exit 1
+          fi
 
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v4
@@ -178,7 +196,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: plan
     environment: staging
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply' && needs.plan.outputs.plan_exit_code == '2'
+    # Run apply when: manual trigger + apply action + changes detected (exit code 2)
+    # Skip if no changes (exit code 0) or error (exit code 1)
+    if: |
+      github.event_name == 'workflow_dispatch' && 
+      github.event.inputs.action == 'apply' && 
+      needs.plan.outputs.plan_exit_code == '2'
     defaults:
       run:
         working-directory: terraform/environments/staging
