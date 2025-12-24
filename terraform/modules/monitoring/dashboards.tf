@@ -21,7 +21,7 @@ locals {
 #--------------------------------------------------------------
 
 resource "azapi_resource_action" "grafana_dashboard" {
-  for_each = var.enable_grafana && var.deploy_dashboards ? local.dashboards : {}
+  for_each = local.dashboards
 
   type        = "Microsoft.Dashboard/grafana@2023-09-01"
   resource_id = "${azurerm_dashboard_grafana.main[0].id}/dashboards/${each.value.uid}"
