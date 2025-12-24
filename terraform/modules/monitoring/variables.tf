@@ -38,12 +38,6 @@ variable "enable_grafana" {
   default     = true
 }
 
-variable "deploy_dashboards" {
-  description = "Deploy Grafana dashboards via API"
-  type        = bool
-  default     = true
-}
-
 variable "grafana_name" {
   description = "Name of the Azure Managed Grafana instance"
   type        = string
